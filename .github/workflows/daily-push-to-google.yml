@@ -1,0 +1,23 @@
+name: Daily Push To Google from Jira
+
+on: 
+  schedule:
+    - cron:  '0 */8 * * *' # this will run three times a day (every 8 hours)
+  workflow_dispatch: # this allows the workflow to be run manually from the Actions tab
+
+jobs:
+  run-container-and-send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run Docker Container
+      run: |
+        docker run --rm \
+        -v $(pwd)/gcp_creds.json:/gcp_creds.json \
+        -e JIRA_TOKEN=${{ secrets.JIRA_TOKEN }} \
+        -e GOOGLE_SHEETS_TOKEN=${{ secrets.GOOGLE_SHEETS_TOKEN }} \
+        -e GOOGLE_SERVICE_ACCOUNT_CREDENTIALS='${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}' \
+        riscvintl/jira-to-google:latest
