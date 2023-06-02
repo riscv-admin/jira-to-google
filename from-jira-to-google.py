@@ -138,36 +138,36 @@ def get_quarter_year_format(date):
     return f"Q{quarter}-{year}"
 
 
-# def get_credentials():
-#     """
-#     Function to get Google API credentials from the service account file.
-#     Returns the credentials object.
-#     """
-#     creds = Credentials.from_service_account_file('token.json')
-
-#     # If modifying the scopes, delete the token.json file
-#     SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 
-#     'https://www.googleapis.com/auth/drive']
-#     scoped_creds = creds.with_scopes(SCOPES)
-
-#     return scoped_creds
-
-
 def get_credentials():
     """
-    Function to get Google API credentials from the environment variable.
+    Function to get Google API credentials from the service account file.
     Returns the credentials object.
     """
-    creds_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')
-    creds_json = json.loads(creds_info)
-    creds = service_account.Credentials.from_service_account_info(creds_json)
+    creds = Credentials.from_service_account_file('gcp_creds.json')
 
     # If modifying the scopes, delete the token.json file
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 
     'https://www.googleapis.com/auth/drive']
     scoped_creds = creds.with_scopes(SCOPES)
 
     return scoped_creds
+
+
+# def get_credentials():
+#     """
+#     Function to get Google API credentials from the environment variable.
+#     Returns the credentials object.
+#     """
+#     creds_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')
+#     creds_json = json.loads(creds_info)
+#     creds = service_account.Credentials.from_service_account_info(creds_json)
+
+#     # If modifying the scopes, delete the token.json file
+#     SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
+#     'https://www.googleapis.com/auth/drive']
+#     scoped_creds = creds.with_scopes(SCOPES)
+
+#     return scoped_creds
 
 
 def read_csv_file(file_path):
