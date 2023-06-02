@@ -143,7 +143,7 @@ def get_quarter_year_format(date):
 #     Function to get Google API credentials from the service account file.
 #     Returns the credentials object.
 #     """
-#     creds = Credentials.from_service_account_file('token.json')
+#     creds = Credentials.from_service_account_file('gcp_creds.json')
 
 #     # If modifying the scopes, delete the token.json file
 #     SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 
