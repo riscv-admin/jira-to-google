@@ -16,16 +16,15 @@ limitations under the License.
 Contributors: Rafael Sene (rafael@riscv.org) - Initial implementation
 """
 
-from jira import JIRA
-import datetime
-
-from google.oauth2 import service_account
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-
 import csv
-import os
+import datetime
 import json
+import os
+
+from datetime import datetime as dt
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from jira import JIRA
 
 
 def get_data_from_jira(jira_token):
@@ -51,6 +50,7 @@ def get_data_from_jira(jira_token):
         'ISA or NON-ISA?', 'Groups.io', 'GitHub','Governing Committee', 
         'Public Review', 'Board Review Planned Approval', 
         'Board Review Planned Approval (Quarter-Year)',
+        'Days Until Board Review Planned Approval',
         'Next Not Started Sub-Task Name', 
         'Next Not Started Sub-Task URL'])
 
@@ -86,6 +86,9 @@ def get_data_from_jira(jira_token):
                     next_not_started_sub_task_name = next_not_started_sub_task[1]
                     next_not_started_sub_task_url = next_not_started_sub_task[0]
 
+                quarterYear=get_quarter_year_format(datetime.datetime.strptime
+                    (issue.fields.duedate, "%Y-%m-%d"))
+
                 writer.writerow([
                     f"https://jira.riscv.org/browse/{issue.key}",
                     issue.fields.summary,
@@ -100,8 +103,9 @@ def get_data_from_jira(jira_token):
                     issue.fields.customfield_10402, # Governing Committee
                     issue.fields.customfield_10508, # Public Review
                     issue.fields.customfield_10451, # Board Review Planned Approval
-                    get_quarter_year_format(datetime.datetime.strptime
-                    (issue.fields.duedate, "%Y-%m-%d")), # Board Review Planned Approval (Quarter-Year)
+                    quarterYear, # Board Review Planned Approval (Quarter-Year)
+                    days_until_end_of_quarter(str((quarterYear.split('-')[1])), 
+                    str(quarterYear.split('-')[0].replace('Q', ''))), # Days until end of quarter
                     next_not_started_sub_task_name, # Next Not Started Sub-Task Name
                     next_not_started_sub_task_url # Next Not Started Sub-Task URL
                 ])
@@ -138,19 +142,30 @@ def get_quarter_year_format(date):
     return f"Q{quarter}-{year}"
 
 
-# def get_credentials():
-#     """
-#     Function to get Google API credentials from the service account file.
-#     Returns the credentials object.
-#     """
-#     creds = Credentials.from_service_account_file('gcp_creds.json')
+def days_until_end_of_quarter(year, quarter):
+    """
+    Function to return the number of days until the end of a given quarter
+    or the number of days since the end of a given quarter.
+    """
+    # Convert year to integer and add the century
+    year = int(year) + 2000
 
-#     # If modifying the scopes, delete the token.json file
-#     SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 
-#     'https://www.googleapis.com/auth/drive']
-#     scoped_creds = creds.with_scopes(SCOPES)
+    # Define a dictionary to map the quarter to its end month and day
+    quarter_end_dates = {1: (3, 31), 2: (6, 30), 3: (9, 30), 4: (12, 31)}
 
-#     return scoped_creds
+    try:
+        # Get the end date of the given quarter
+        end_date = dt(year, *quarter_end_dates[int(quarter)])
+    except KeyError:
+        # If an invalid quarter number is provided, return an error message
+        return "Invalid quarter"
+
+    # Get the current date
+    today = dt.now()
+
+    # Calculate the number of days between the end date and today
+    remaining_days = (end_date - today).days
+    return f"{remaining_days}"
 
 
 def get_credentials():
