@@ -89,6 +89,15 @@ def get_data_from_jira(jira_token):
                 quarterYear=get_quarter_year_format(datetime.datetime.strptime
                     (issue.fields.duedate, "%Y-%m-%d"))
 
+                quarter_year_parts = quarterYear.split('-')
+
+                if issue.fields.status.name == 'Specification Done':
+                    daysToBoardApproval = 0
+                else:
+                    quarter = quarter_year_parts[0].replace('Q', '')
+                    year = quarter_year_parts[1]
+                    daysToBoardApproval = days_until_end_of_quarter(year, quarter)
+
                 writer.writerow([
                     f"https://jira.riscv.org/browse/{issue.key}",
                     issue.fields.summary,
@@ -104,8 +113,7 @@ def get_data_from_jira(jira_token):
                     issue.fields.customfield_10508, # Public Review
                     issue.fields.customfield_10451, # Board Review Planned Approval
                     quarterYear, # Board Review Planned Approval (Quarter-Year)
-                    days_until_end_of_quarter(str((quarterYear.split('-')[1])), 
-                    str(quarterYear.split('-')[0].replace('Q', ''))), # Days until end of quarter
+                    daysToBoardApproval, # Days until end of quarter
                     next_not_started_sub_task_name, # Next Not Started Sub-Task Name
                     next_not_started_sub_task_url # Next Not Started Sub-Task URL
                 ])
