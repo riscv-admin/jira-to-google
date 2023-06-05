@@ -31,8 +31,8 @@ def get_data_from_jira(jira_token):
     """
     Fetch data from JIRA with given JIRA_TOKEN and JQL (JIRA Query Language)
     """
-    jira = JIRA("https://jira.riscv.org", 
-    token_auth=jira_token)
+    jira = JIRA("https://jira.riscv.org",
+                token_auth=jira_token)
 
     # This JQL will return all sub-task type issues which are not completed
     jql = 'project = RVS AND (resolution = Unresolved OR resolution = Done) AND \
@@ -44,15 +44,15 @@ def get_data_from_jira(jira_token):
     # Open (or create) a CSV file and write data to it
     with open(csv_filename, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Jira URL', 
-        'Summary', 'Status', 'Created', 
-        'Updated', 'Due Date', 'Is Fast Track?', 
-        'ISA or NON-ISA?', 'Groups.io', 'GitHub','Governing Committee', 
-        'Public Review', 'Board Review Planned Approval', 
-        'Board Review Planned Approval (Quarter-Year)',
-        'Days Until Board Review Planned Approval',
-        'Next Not Started Sub-Task Name', 
-        'Next Not Started Sub-Task URL'])
+        writer.writerow(['Jira URL',
+                         'Summary', 'Status', 'Next Phase', 'Created',
+                         'Updated', 'Due Date', 'Waivers', 'Is Fast Track?',
+                         'ISA or NON-ISA?', 'Groups.io', 'GitHub', 'Governing Committee',
+                         'Public Review', 'Board Review Planned Approval',
+                         'Board Review Planned Approval (Quarter-Year)',
+                         'Days Until Board Review Planned Approval',
+                         'Next Not Started Sub-Task Name',
+                         'Next Not Started Sub-Task URL'])
 
         start = 0
         while True:
@@ -61,33 +61,33 @@ def get_data_from_jira(jira_token):
             if len(issues) == 0:
                 break
 
-            completed_statuses = {'Approved','AR Approved','Resolved','Done',
-            'Not Required to Freeze','AR Review Not Required','Not Required',
-            'Not Required for Ratification-Ready','Ecosystem Development Done',
-            'Not Required for Ecosystem', 'Freeze Waiver Granted', 
-            'Ratification-Ready Waiver Granted'}
+            completed_statuses = {'Approved', 'AR Approved', 'Resolved', 'Done',
+                                  'Not Required to Freeze', 'AR Review Not Required', 'Not Required',
+                                  'Not Required for Ratification-Ready', 'Ecosystem Development Done',
+                                  'Not Required for Ecosystem', 'Freeze Waiver Granted',
+                                  'Ratification-Ready Waiver Granted'}
 
             for issue in issues:
                 if not issue.fields.subtasks:
                     continue
 
-                next_not_started_sub_task = next(((f"https://jira.riscv.org/browse/{subtask.key}", 
-                subtask.fields.summary) 
-                                                for subtask in issue.fields.subtasks 
-                                                if subtask.fields.status.name not in 
-                                                completed_statuses), 
-                                                (None, None))
+                next_not_started_sub_task = next(((f"https://jira.riscv.org/browse/{subtask.key}",
+                                                   subtask.fields.summary)
+                                                  for subtask in issue.fields.subtasks
+                                                  if subtask.fields.status.name not in
+                                                  completed_statuses),
+                                                 (None, None))
 
                 if next_not_started_sub_task[0] is None and \
-                    next_not_started_sub_task[1] is None:
+                        next_not_started_sub_task[1] is None:
                     next_not_started_sub_task_name = "There is no next sub-task"
                     next_not_started_sub_task_url = "There is no next sub-task"
                 else:
                     next_not_started_sub_task_name = next_not_started_sub_task[1]
                     next_not_started_sub_task_url = next_not_started_sub_task[0]
 
-                quarterYear=get_quarter_year_format(datetime.datetime.strptime
-                    (issue.fields.duedate, "%Y-%m-%d"))
+                quarterYear = get_quarter_year_format(datetime.datetime.strptime
+                                                      (issue.fields.duedate, "%Y-%m-%d"))
 
                 quarter_year_parts = quarterYear.split('-')
 
@@ -96,28 +96,73 @@ def get_data_from_jira(jira_token):
                 else:
                     quarter = quarter_year_parts[0].replace('Q', '')
                     year = quarter_year_parts[1]
-                    daysToBoardApproval = days_until_end_of_quarter(year, quarter)
+                    daysToBoardApproval = days_until_end_of_quarter(
+                        year, quarter)
 
                 writer.writerow([
                     f"https://jira.riscv.org/browse/{issue.key}",
                     issue.fields.summary,
                     issue.fields.status.name,
+                    next_phase(issue.fields.status.name),
                     str(issue.fields.created).split("T")[0],
                     str(issue.fields.updated).split("T")[0],
                     issue.fields.duedate,
-                    issue.fields.customfield_10406, # Is Fast Track?
-                    issue.fields.customfield_10440, # ISA or NON-ISA?
-                    issue.fields.customfield_10507, # Groups.io
-                    issue.fields.customfield_10401, # GitHub
-                    issue.fields.customfield_10402, # Governing Committee
-                    issue.fields.customfield_10508, # Public Review
-                    issue.fields.customfield_10451, # Board Review Planned Approval
-                    quarterYear, # Board Review Planned Approval (Quarter-Year)
-                    daysToBoardApproval, # Days until end of quarter
-                    next_not_started_sub_task_name, # Next Not Started Sub-Task Name
-                    next_not_started_sub_task_url # Next Not Started Sub-Task URL
+                    find_waiver_granted_labels(
+                        issue.fields.labels),  # List Waivers
+                    issue.fields.customfield_10406,  # Is Fast Track?
+                    issue.fields.customfield_10440,  # ISA or NON-ISA?
+                    issue.fields.customfield_10507,  # Groups.io
+                    issue.fields.customfield_10401,  # GitHub
+                    issue.fields.customfield_10402,  # Governing Committee
+                    issue.fields.customfield_10508,  # Public Review
+                    issue.fields.customfield_10451,  # Board Review Planned Approval
+                    # Board Review Planned Approval (Quarter-Year)
+                    quarterYear,
+                    daysToBoardApproval,  # Days until end of quarter
+                    next_not_started_sub_task_name,  # Next Not Started Sub-Task Name
+                    next_not_started_sub_task_url  # Next Not Started Sub-Task URL
                 ])
             start += len(issues)
+
+
+def find_waiver_granted_labels(labels):
+    """
+    Use a list comprehension to filter out labels that contain "granted"
+    """
+    granted_labels = [label for label in labels if "granted" in label.lower()]
+
+    # If the list is not empty, return the labels concatenated
+    # by " and ". Otherwise, return "No Waiver".
+    if granted_labels:
+        return " and ".join(granted_labels)
+    else:
+        return "No Waiver"
+
+
+def next_phase(current_phase):
+    # Define the phases and their corresponding next phases
+    phases = {
+        "inception": "Planning",
+        "planning": "Development",
+        "development": "Freeze",
+        "freeze": "Ratification-Ready",
+        "ratification-ready": ["Ecosystem Development", "Specification Completed"],
+        "ecosystem development": "Specification Completed",
+        "specification done": "No Next Phase",
+    }
+
+    # Transform the current phase to lowercase
+    current_phase_lower = current_phase.lower()
+
+    # Check if the current phase contains "ratification-ready"
+    if "ratification-ready" in current_phase_lower:
+        return " or ".join(phases["ratification-ready"])
+
+    # Otherwise, check if the current phase is in the dictionary
+    elif current_phase_lower in phases:
+        return phases[current_phase_lower]
+    else:
+        raise ValueError(f"Invalid phase: {current_phase}")
 
 
 def get_csv_content(csv_filepath):
@@ -187,7 +232,7 @@ def get_credentials():
 
     # If modifying the scopes, delete the token.json file
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive']
+              'https://www.googleapis.com/auth/drive']
     scoped_creds = creds.with_scopes(SCOPES)
 
     return scoped_creds
@@ -209,7 +254,7 @@ def get_range_name(values):
     num_rows = len(values)
     num_cols = len(values[0]) if values else 0
 
-    # Convert the column number to a column letter 
+    # Convert the column number to a column letter
     # (e.g., 1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, ...)
     letters = ""
     while num_cols:
@@ -231,9 +276,9 @@ def upload_to_google_sheet(values, creds, spreadsheet_id, range_name):
 
     # Call the Sheets API
     service.spreadsheets().values().update(
-        spreadsheetId=spreadsheet_id, 
-        range=range_name, 
-        valueInputOption="USER_ENTERED", 
+        spreadsheetId=spreadsheet_id,
+        range=range_name,
+        valueInputOption="USER_ENTERED",
         body=body
     ).execute()
 
@@ -243,7 +288,7 @@ def main():
     The main function to run the whole script
     """
     # Define your JIRA API token
-    get_data_from_jira(os.getenv('JIRA_TOKEN'))
+    get_data_from_jira(os.getenv('JIRA_API_TOKEN'))
     csv_content = get_csv_content('specs.csv')
     creds = get_credentials()
     range_name = get_range_name(csv_content)
