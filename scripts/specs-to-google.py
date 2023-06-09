@@ -287,8 +287,19 @@ def main():
     """
     The main function to run the whole script
     """
-    # Define your JIRA API token
-    get_data_from_jira(os.getenv('JIRA_API_TOKEN'))
+
+    # Check if the required environment variables are set
+    if not all([os.getenv('JIRA_TOKEN'), os.getenv('GOOGLE_SHEETS_TOKEN'), \
+            os.getenv('GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')]):
+        raise EnvironmentError("""
+            Error: Required environment variables are not set.
+            Please check your:
+            - JIRA_TOKEN
+            - GOOGLE_SHEETS_TOKEN
+            - GOOGLE_SERVICE_ACCOUNT_CREDENTIALS
+        """)
+
+    get_data_from_jira(os.getenv('JIRA_TOKEN'))
     csv_content = get_csv_content('specs.csv')
     creds = get_credentials()
     range_name = get_range_name(csv_content)

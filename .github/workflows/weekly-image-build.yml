@@ -1,4 +1,4 @@
-name: Docker Image Build and Release
+name: Container Images Build and Release
 
 on:
   push:
@@ -35,16 +35,27 @@ jobs:
         id: current_date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-      - name: Build image and push to Docker Hub
+      - name: Building specs-to-google image
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./Dockerfiles/jira-to-google
+          file: ./Dockerfiles/specs-to-google
           platforms: linux/amd64,linux/arm64
           tags: |
-            riscvintl/jira-to-google:${{ github.sha }}
-            riscvintl/jira-to-google:latest
+            riscvintl/specs-to-google:${{ github.sha }}
+            riscvintl/specs-to-google:latest
           push: ${{ github.event_name != 'pull_request' }}
+
+      - name: Building groups-to-google image
+        uses: docker/build-push-action@v3
+        with:
+            context: .
+            file: ./Dockerfiles/groups-to-google
+            platforms: linux/amd64,linux/arm64
+            tags: |
+              riscvintl/groups-to-google:${{ github.sha }}
+              riscvintl/groups-to-google:latest
+            push: ${{ github.event_name != 'pull_request' }}
 
       - name: Create Release
         id: create_release
@@ -56,4 +67,4 @@ jobs:
           tag_name: release-${{ env.CURRENT_DATE }}-${{ github.sha }}
           release_name: Release ${{ env.CURRENT_DATE }}-${{ github.sha }}
           body: |
-            This release contains the latest container image built by this repository and hosted at [riscvintl/jira-to-google::latest](https://hub.docker.com/repository/docker/riscvintl/jira-to-google/general).
+            This release contains the latest container images built by this repository and hosted at [riscvintl](https://hub.docker.com/repository/docker/riscvintl).

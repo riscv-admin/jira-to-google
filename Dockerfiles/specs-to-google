@@ -10,7 +10,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir google-auth google-auth-httplib2 google-auth-oauthlib google-api-python-client jira
 
 # Copy the Python script to the Docker image
-COPY from-jira-to-google.py /app/from-jira-to-google.py
+COPY ../scripts/specs-to-google.py /app/specs-to-google.py
 
 # Set environment variables for JIRA and Google Sheets tokens
 ENV JIRA_TOKEN=""
@@ -18,4 +18,4 @@ ENV GOOGLE_SHEETS_TOKEN=""
 ENV GOOGLE_SERVICE_ACCOUNT_CREDENTIALS=""
 
 # Run the Python script
-CMD [ "python", "./from-jira-to-google.py" ]
+CMD [ "python", "./specs-to-google.py" ]

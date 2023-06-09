@@ -1,4 +1,4 @@
-name: Daily Push Specs to Google Sheets
+name: Daily Push Groups To Google Sheets
 
 on: 
   schedule:
@@ -20,4 +20,4 @@ jobs:
         -e JIRA_TOKEN=${{ secrets.JIRA_TOKEN }} \
         -e GOOGLE_SHEETS_TOKEN=${{ secrets.GOOGLE_SHEETS_TOKEN }} \
         -e GOOGLE_SERVICE_ACCOUNT_CREDENTIALS='${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}' \
-        riscvintl/specs-to-google:latest
+        riscvintl/groups-to-google:latest
