@@ -13,7 +13,56 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-Contributors: Rafael Sene (rafael@riscv.org) - Initial implementation
+    Contributors: Rafael Sene (rafael@riscv.org) - Initial implementation
+
+Script Overview:
+
+This Python script interacts with both the Jira and Google Sheets APIs. It 
+fetches data from Jira using a specific Jira Query Language (JQL) and 
+uploads the data to a Google Sheets document.
+
+Functions:
+
+- get_data_from_jira(jira_token: str): Fetches data from JIRA with the provided 
+JIRA_TOKEN and a pre-specified JQL. The fetched data is saved to a CSV file called 
+'specs.csv'.
+
+- find_waiver_granted_labels(labels: List[str]): Returns labels from the provided list 
+that contain "granted" or "No Waiver" if no such labels exist.
+
+- next_phase(current_phase: str): Determines the next phase based on the current phase 
+of a project. The phases are pre-defined within the function.
+
+- get_csv_content(csv_filepath: str): Reads a CSV file and returns its content as a
+ list of rows.
+
+- get_quarter(date: datetime): Calculates the quarter of a provided date.
+
+- get_quarter_year_format(date: datetime): Returns the quarter and last two digits 
+of the year in the format 'Q2-23'.
+
+- days_until_end_of_quarter(year: str, quarter: str): Calculates the number of days 
+remaining until the end of the given quarter.
+
+- get_credentials(): Retrieves Google API credentials from the environment variable.
+
+- read_csv_file(file_path: str): Reads a CSV file and returns its content as a list of rows.
+
+- get_range_name(values: List[List[Any]]): Calculates the range for Google Sheets based 
+on the size of the provided list of values.
+
+- upload_to_google_sheet(values: List[List[Any]], creds: Any, spreadsheet_id: str, range_name: str):
+Uploads provided values to a specified Google Sheets document.
+
+- main():
+This is the main function that executes the script. It fetches data from Jira, 
+reads the fetched data from 'specs.csv', retrieves Google API credentials, calculates 
+the range for Google Sheets, and finally, uploads the data to Google Sheets.
+
+The script runs as a standalone program by calling the main() function. The main 
+function requires three environment variables: JIRA_TOKEN, GOOGLE_SHEETS_TOKEN, and 
+GOOGLE_SERVICE_ACCOUNT_CREDENTIALS. These credentials are used to authenticate and 
+authorize the script to access and manipulate data on JIRA and Google Sheets..
 """
 
 import csv
