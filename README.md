@@ -13,7 +13,6 @@ The Docker image can be run using the following command:
 ```bash
 # Specifications
 docker run --rm \
-        -v $(pwd)/gcp_creds.json:/gcp_creds.json \
         -e JIRA_TOKEN=${{ secrets.JIRA_TOKEN }} \
         -e GOOGLE_SHEETS_TOKEN=${{ secrets.GOOGLE_SHEETS_TOKEN }} \
         -e GOOGLE_SERVICE_ACCOUNT_CREDENTIALS='${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}' \
@@ -21,7 +20,6 @@ docker run --rm \
 
 # Groups
 docker run --rm \
-        -v $(pwd)/gcp_creds.json:/gcp_creds.json \
         -e JIRA_TOKEN=${{ secrets.JIRA_TOKEN }} \
         -e GOOGLE_SHEETS_TOKEN=${{ secrets.GOOGLE_SHEETS_TOKEN }} \
         -e GOOGLE_SERVICE_ACCOUNT_CREDENTIALS='${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS }}' \
