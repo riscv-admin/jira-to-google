@@ -214,7 +214,7 @@ def get_linked_issues(issue):
         return "No Specification is linked to the group yet."
     
     # join the list into a single string with each link separated by a newline character
-    return ", ".join(linked_issues)
+    return "\n ".join(linked_issues)
 
 
 def remaining_days(target_date_str=None):
