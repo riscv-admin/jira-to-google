@@ -203,15 +203,16 @@ def next_phase(current_phase):
     # Transform the current phase to lowercase
     current_phase_lower = current_phase.lower()
 
-    # Check if the current phase contains "ratification-ready"
-    if "ratification-ready" in current_phase_lower:
-        return " or ".join(phases["ratification-ready"])
+    # Find any phase that is in current_phase_lower
+    matching_phase_key = next((key for key in phases.keys() if key in current_phase_lower), None)
 
-    # Otherwise, check if the current phase is in the dictionary
-    elif current_phase_lower in phases:
-        return phases[current_phase_lower]
-    else:
-        raise ValueError(f"Invalid phase: {current_phase}")
+    if matching_phase_key is not None:
+        if matching_phase_key == "ratification-ready":
+            return " or ".join(phases[matching_phase_key])
+        else:
+            return phases[matching_phase_key]
+
+    raise ValueError(f"Invalid phase: {current_phase}")
 
 
 def get_csv_content(csv_filepath):
