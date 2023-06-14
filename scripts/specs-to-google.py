@@ -135,18 +135,24 @@ def get_data_from_jira(jira_token):
                     next_not_started_sub_task_name = next_not_started_sub_task[1]
                     next_not_started_sub_task_url = next_not_started_sub_task[0]
 
-                quarterYear = get_quarter_year_format(datetime.datetime.strptime
-                                                      (issue.fields.duedate, "%Y-%m-%d"))
+                if issue.fields.duedate is not None:
+                    quarterYear = get_quarter_year_format(datetime.datetime.strptime\
+                                                          (issue.fields.duedate, "%Y-%m-%d"))
+                else:
+                    quarterYear = "Due Date is not set"
 
                 quarter_year_parts = quarterYear.split('-')
 
                 if issue.fields.status.name == 'Specification Done':
                     daysToBoardApproval = 0
                 else:
-                    quarter = quarter_year_parts[0].replace('Q', '')
-                    year = quarter_year_parts[1]
-                    daysToBoardApproval = days_until_end_of_quarter(
-                        year, quarter)
+                    # Ensure quarter_year_parts has at least two elements before trying to access them
+                    if len(quarter_year_parts) < 2:
+                        daysToBoardApproval = "Due Date is not set"
+                    else:
+                        quarter = quarter_year_parts[0].replace('Q', '')
+                        year = quarter_year_parts[1]
+                        daysToBoardApproval = days_until_end_of_quarter(year, quarter)
 
                 writer.writerow([
                     f"https://jira.riscv.org/browse/{issue.key}",
@@ -238,6 +244,10 @@ def get_quarter_year_format(date):
     """
     Function to generate the quarter and year format (e.g., "Q2-23")
     """
+    # Check if the date is None
+    if date is None:
+        return "Date not set, quarter calculation not possible."
+
     quarter = get_quarter(date)  # Get the quarter
     # Extract the last two digits of the year
     year = str(date.year)[2:]
@@ -356,7 +366,6 @@ def main():
     upload_to_google_sheet(csv_content, creds,
     os.getenv('GOOGLE_SHEETS_TOKEN'),
     range_name)
-
 
 if __name__ == '__main__':
     main()
