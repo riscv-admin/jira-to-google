@@ -96,7 +96,7 @@ def get_data_from_jira(jira_token):
         writer.writerow(['Jira URL',
                          'Summary', 'Status', 'Next Phase', 'Created',
                          'Updated', 'Due Date', 'Waivers', 'Is Fast Track?',
-                         'ISA or NON-ISA?', 'Groups.io', 'GitHub', 'Governing Committee',
+                         'ISA or NON-ISA?','Architecture Review Status','Groups.io', 'GitHub', 'Governing Committee',
                          'Public Review', 'Board Review Planned Approval',
                          'Board Review Planned Approval (Quarter-Year)',
                          'Days Until Board Review Planned Approval',
@@ -166,6 +166,7 @@ def get_data_from_jira(jira_token):
                         issue.fields.labels),  # List Waivers
                     issue.fields.customfield_10406,  # Is Fast Track?
                     issue.fields.customfield_10440,  # ISA or NON-ISA?
+                    issue.fields.customfield_10523,  # Architecture Review Status
                     issue.fields.customfield_10507,  # Groups.io
                     issue.fields.customfield_10401,  # GitHub
                     issue.fields.customfield_10402,  # Governing Committee
