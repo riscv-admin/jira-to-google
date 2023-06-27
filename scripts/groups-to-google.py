@@ -84,10 +84,10 @@ def get_data_from_jira(jira_token):
         writer = csv.writer(file)
         writer.writerow(['Jira URL',
                          'Summary',
+                         'Group Charter',
                          'Group Current Phase',
                          'Group Next Phase',
                          'Group Type',
-                         'GitHub',
                          'Governing Committee',
                          'Dotted-line Governing Committee',
                          'Group Lifecycle Starting Date',
@@ -118,10 +118,10 @@ def get_data_from_jira(jira_token):
                     writer.writerow([
                         f"https://jira.riscv.org/browse/{issue.key}",
                         issue.fields.summary,
+                        issue.fields.customfield_10524,  # Group Charter
                         issue.fields.status.name,
                         next_phase(issue.fields.status.name),  # Group Next Phase
                         issue.fields.customfield_10515,  # Group Type
-                        issue.fields.customfield_10401,  # GitHub
                         issue.fields.customfield_10402,  # Governing Committee
                         # Dotted-line Governing Committee
                         extract_names(issue.fields.customfield_10516),
