@@ -69,6 +69,8 @@ import csv
 import datetime
 import json
 import os
+import urllib.parse
+
 
 from datetime import datetime as dt
 from google.oauth2 import service_account
@@ -92,16 +94,16 @@ def get_data_from_jira(jira_token):
 
     # Open (or create) a CSV file and write data to it
     with open(csv_filename, 'w', newline='') as file:
-        writer = csv.writer(file)
+        writer = csv.writer(file,quotechar="'", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['Jira URL',
                          'Summary', 'Status', 'Next Phase', 'Created',
                          'Updated', 'Due Date', 'Waivers', 'Is Fast Track?',
                          'ISA or NON-ISA?','Architecture Review Status','Groups.io', 'GitHub', 'Governing Committee',
-                         'Public Review', 'Board Review Planned Approval',
+                         'Public Review', 'Freeze Topsheet', 'Ratification-Ready Topsheet',
+                         'Board Review Planned Approval',
                          'Board Review Planned Approval (Quarter-Year)',
                          'Days Until Board Review Planned Approval',
-                         'Next Not Started Sub-Task Name',
-                         'Next Not Started Sub-Task URL'])
+                         'Next Not Started Sub-Task'])
 
         start = 0
         while True:
@@ -163,7 +165,7 @@ def get_data_from_jira(jira_token):
                     str(issue.fields.updated).split("T")[0],
                     issue.fields.duedate,
                     find_waiver_granted_labels(
-                        issue.fields.labels),  # List Waivers
+                    issue.fields.labels),  # List Waivers
                     issue.fields.customfield_10406,  # Is Fast Track?
                     issue.fields.customfield_10440,  # ISA or NON-ISA?
                     issue.fields.customfield_10523,  # Architecture Review Status
@@ -171,14 +173,52 @@ def get_data_from_jira(jira_token):
                     issue.fields.customfield_10401,  # GitHub
                     issue.fields.customfield_10402,  # Governing Committee
                     issue.fields.customfield_10508,  # Public Review
+                    generate_jira_url(issue.key, 'Freeze', 'Freeze Topsheet'),  # Freeze Topsheet
+                    generate_jira_url(issue.key, 'Ratification-Ready', 'Ratification-Ready Topsheet'),  # Ratification-Ready Topsheet
                     issue.fields.customfield_10451,  # Board Review Planned Approval
                     # Board Review Planned Approval (Quarter-Year)
                     quarterYear,
                     daysToBoardApproval,  # Days until end of quarter
-                    next_not_started_sub_task_name,  # Next Not Started Sub-Task Name
-                    next_not_started_sub_task_url  # Next Not Started Sub-Task URL
+                    generate_next_jira_task_hyperlink(next_not_started_sub_task_url,next_not_started_sub_task_name)
                 ])
             start += len(issues)
+
+
+def generate_next_jira_task_hyperlink(url, link_text):
+    """
+    This function generates a Jira URL Hyperlink
+    """
+
+    # Define the URL with placeholders for the parent issue key, summary, and link text
+    url_template = (
+        '=HYPERLINK("{}", "{}")'
+    )
+
+    # Format the URL with the provided parent issue key, summary, and link text
+    final_url = url_template.format(url, link_text)
+
+    return final_url
+
+
+def generate_jira_url(parent_issue_key, summary, link_text):
+    """
+    This function generates a Jira URL with a given JQL query
+    """
+
+    notin = 'Freeze' if 'Ratification-Ready' in summary else 'Ratification-Ready'
+
+    # Define the URL with placeholders for the parent issue key, summary, and link text
+    url_template = (
+        '=HYPERLINK("https://jira.riscv.org/issues/?jql=project%20%3D%20RVS'
+        '%20AND%20parent%20%3D%20%22{}%22%20AND%20'
+        '(summary%20~%20%22{}%22%20AND%20summary%20!~%20{})'
+        '%20ORDER%20BY%20issuetype%20DESC", "{}")'
+    )
+
+    # Format the URL with the provided parent issue key, summary, and link text
+    final_url = url_template.format(parent_issue_key, summary, notin, link_text)
+
+    return final_url
 
 
 def find_waiver_granted_labels(labels):
@@ -202,7 +242,8 @@ def next_phase(current_phase):
         "planning": "Development",
         "development": "Freeze",
         "freeze": "Ratification-Ready",
-        "ratification-ready": ["Ecosystem Development", "Specification Completed"],
+        "ratification-ready": ["Ecosystem Development", "Specification Ratified", "Specification Completed"],
+        "specification ratified": ["Ecosystem Development", "Specification Completed"],
         "ecosystem development": "Specification Completed",
         "specification done": "No Next Phase",
     }
@@ -214,7 +255,7 @@ def next_phase(current_phase):
     matching_phase_key = next((key for key in phases.keys() if key in current_phase_lower), None)
 
     if matching_phase_key is not None:
-        if matching_phase_key == "ratification-ready":
+        if matching_phase_key == "ratification-ready" or matching_phase_key == "specification ratified":
             return " or ".join(phases[matching_phase_key])
         else:
             return phases[matching_phase_key]
@@ -227,7 +268,7 @@ def get_csv_content(csv_filepath):
     Read a CSV file and return its content as a list of rows
     """
     with open(csv_filepath, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file)
+        csv_reader = csv.reader(csv_file, quotechar="'")
         return list(csv_reader)
 
 
