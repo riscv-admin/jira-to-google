@@ -69,6 +69,7 @@ import csv
 import datetime
 import json
 import os
+import re
 import urllib.parse
 
 
@@ -171,7 +172,7 @@ def get_data_from_jira(jira_token):
                     issue.fields.customfield_10523,  # Architecture Review Status
                     issue.fields.customfield_10507,  # Groups.io
                     issue.fields.customfield_10401,  # GitHub
-                    issue.fields.customfield_10402,  # Governing Committee
+                    extract_values(issue.fields.customfield_10527),  # Governing Committee
                     issue.fields.customfield_10508,  # Public Review
                     generate_jira_url(issue.key, 'Freeze', 'Freeze Topsheet'),  # Freeze Topsheet
                     generate_jira_url(issue.key, 'Ratification-Ready', 'Ratification-Ready Topsheet'),  # Ratification-Ready Topsheet
@@ -182,6 +183,22 @@ def get_data_from_jira(jira_token):
                     generate_next_jira_task_hyperlink(next_not_started_sub_task_url,next_not_started_sub_task_name)
                 ])
             start += len(issues)
+
+
+def extract_values(arr):
+    values = [item.value for item in arr]
+    
+    if not values:  # if list is empty
+        return ''
+    
+    # if list contains only one value or two values, join them appropriately
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        return ' and '.join(values)
+        
+    # if list contains more than two values, join all with commas and 'and' before the last one
+    return ', '.join(values[:-1]) + ' and ' + values[-1]
 
 
 def generate_next_jira_task_hyperlink(url, link_text):
