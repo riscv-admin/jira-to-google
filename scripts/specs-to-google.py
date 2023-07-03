@@ -146,16 +146,20 @@ def get_data_from_jira(jira_token):
 
                 quarter_year_parts = quarterYear.split('-')
 
-                if issue.fields.status.name == 'Specification Done':
+                status = issue.fields.status.name
+                if status in ['Specification Done', 'Specification Ratified']:
                     daysToBoardApproval = 0
                 else:
-                    # Ensure quarter_year_parts has at least two elements before trying to access them
-                    if len(quarter_year_parts) < 2:
-                        daysToBoardApproval = "Due Date is not set"
-                    else:
-                        quarter = quarter_year_parts[0].replace('Q', '')
-                        year = quarter_year_parts[1]
-                        daysToBoardApproval = days_until_end_of_quarter(year, quarter)
+                    # Ensure quarter_year_parts has at least two 
+                    # elements before trying to access them
+                    daysToBoardApproval = (
+                        "Due Date is not set" 
+                        if len(quarter_year_parts) < 2 
+                        else days_until_end_of_quarter(
+                            quarter_year_parts[1], 
+                            quarter_year_parts[0].replace('Q', '')
+                        )
+                    )
 
                 writer.writerow([
                     f"https://jira.riscv.org/browse/{issue.key}",
