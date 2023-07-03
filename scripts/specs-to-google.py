@@ -107,6 +107,7 @@ def get_data_from_jira(jira_token):
             'Waivers',
             'Is Fast Track?',
             'ISA or NON-ISA?',
+            'Privileged or Unprivileged?',
             'Architecture Review Status',
             'Groups.io',
             'GitHub',
@@ -201,6 +202,7 @@ def get_data_from_jira(jira_token):
                     find_waiver_granted_labels(issue.fields.labels),  # List Waivers
                     issue.fields.customfield_10406,  # Is Fast Track?
                     issue.fields.customfield_10440,  # ISA or NON-ISA?
+                    extract_values(issue.fields.customfield_10528),  # Privileged or Unprivileged?
                     issue.fields.customfield_10523,  # Architecture Review Status
                     issue.fields.customfield_10507,  # Groups.io
                     issue.fields.customfield_10401,  # GitHub
@@ -222,6 +224,11 @@ def get_data_from_jira(jira_token):
 
 
 def extract_values(arr):
+    ''''
+    This function extracts values from a Jira array field,
+    and returns a comma-separated string of values.
+    array field = multi-selection list
+    '''
     if arr is None:
         return 'None'
 
