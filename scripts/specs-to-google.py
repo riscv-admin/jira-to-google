@@ -95,16 +95,31 @@ def get_data_from_jira(jira_token):
 
     # Open (or create) a CSV file and write data to it
     with open(csv_filename, 'w', newline='') as file:
-        writer = csv.writer(file,quotechar="'", quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['Jira URL',
-                         'Summary', 'Status', 'Next Phase', 'Created',
-                         'Updated', 'Due Date', 'Waivers', 'Is Fast Track?',
-                         'ISA or NON-ISA?','Architecture Review Status','Groups.io', 'GitHub', 'Governing Committee',
-                         'Public Review', 'Freeze Topsheet', 'Ratification-Ready Topsheet',
-                         'Board Review Planned Approval',
-                         'Board Review Planned Approval (Quarter-Year)',
-                         'Days Until Board Review Planned Approval',
-                         'Next Not Started Sub-Task'])
+        writer = csv.writer(file, quotechar="'", quoting=csv.QUOTE_MINIMAL)
+        writer.writerow([
+            'Jira URL',
+            'Summary',
+            'Status',
+            'Next Phase',
+            'Created',
+            'Updated',
+            'Due Date',
+            'Waivers',
+            'Is Fast Track?',
+            'ISA or NON-ISA?',
+            'Architecture Review Status',
+            'Groups.io',
+            'GitHub',
+            'Governing Committee',
+            'Dotted Line Governing Committee',
+            'Public Review',
+            'Freeze Topsheet',
+            'Ratification-Ready Topsheet',
+            'Board Review Planned Approval',
+            'Board Review Planned Approval (Quarter-Year)',
+            'Days Until Board Review Planned Approval',
+            'Next Not Started Sub-Task'
+        ])
 
         start = 0
         while True:
@@ -113,25 +128,38 @@ def get_data_from_jira(jira_token):
             if len(issues) == 0:
                 break
 
-            completed_statuses = {'Approved', 'AR Approved', 'Resolved', 'Done',
-                                  'Not Required to Freeze', 'AR Review Not Required', 'Not Required',
-                                  'Not Required for Ratification-Ready', 'Ecosystem Development Done',
-                                  'Not Required for Ecosystem', 'Freeze Waiver Granted',
-                                  'Ratification-Ready Waiver Granted'}
+            completed_statuses = {
+                'Approved',
+                'AR Approved',
+                'Resolved',
+                'Done',
+                'Not Required to Freeze',
+                'AR Review Not Required',
+                'Not Required',
+                'Not Required for Ratification-Ready',
+                'Ecosystem Development Done',
+                'Not Required for Ecosystem',
+                'Freeze Waiver Granted',
+                'Ratification-Ready Waiver Granted'
+            }
 
             for issue in issues:
                 if not issue.fields.subtasks:
                     continue
 
-                next_not_started_sub_task = next(((f"https://jira.riscv.org/browse/{subtask.key}",
-                                                   subtask.fields.summary)
-                                                  for subtask in issue.fields.subtasks
-                                                  if subtask.fields.status.name not in
-                                                  completed_statuses),
-                                                 (None, None))
+                next_not_started_sub_task = next(
+                    (
+                        (
+                            f"https://jira.riscv.org/browse/{subtask.key}",
+                            subtask.fields.summary
+                        )
+                        for subtask in issue.fields.subtasks
+                        if subtask.fields.status.name not in completed_statuses
+                    ),
+                    (None, None)
+                )
 
-                if next_not_started_sub_task[0] is None and \
-                        next_not_started_sub_task[1] is None:
+                if next_not_started_sub_task[0] is None and next_not_started_sub_task[1] is None:
                     next_not_started_sub_task_name = "There is no next sub-task"
                     next_not_started_sub_task_url = "There is no next sub-task"
                 else:
@@ -139,8 +167,9 @@ def get_data_from_jira(jira_token):
                     next_not_started_sub_task_url = next_not_started_sub_task[0]
 
                 if issue.fields.duedate is not None:
-                    quarterYear = get_quarter_year_format(datetime.datetime.strptime\
-                                                          (issue.fields.duedate, "%Y-%m-%d"))
+                    quarterYear = get_quarter_year_format(
+                        datetime.datetime.strptime(issue.fields.duedate, "%Y-%m-%d")
+                    )
                 else:
                     quarterYear = "Due Date is not set"
 
@@ -153,10 +182,10 @@ def get_data_from_jira(jira_token):
                     # Ensure quarter_year_parts has at least two 
                     # elements before trying to access them
                     daysToBoardApproval = (
-                        "Due Date is not set" 
-                        if len(quarter_year_parts) < 2 
+                        "Due Date is not set"
+                        if len(quarter_year_parts) < 2
                         else days_until_end_of_quarter(
-                            quarter_year_parts[1], 
+                            quarter_year_parts[1],
                             quarter_year_parts[0].replace('Q', '')
                         )
                     )
@@ -169,27 +198,33 @@ def get_data_from_jira(jira_token):
                     str(issue.fields.created).split("T")[0],
                     str(issue.fields.updated).split("T")[0],
                     issue.fields.duedate,
-                    find_waiver_granted_labels(
-                    issue.fields.labels),  # List Waivers
+                    find_waiver_granted_labels(issue.fields.labels),  # List Waivers
                     issue.fields.customfield_10406,  # Is Fast Track?
                     issue.fields.customfield_10440,  # ISA or NON-ISA?
                     issue.fields.customfield_10523,  # Architecture Review Status
                     issue.fields.customfield_10507,  # Groups.io
                     issue.fields.customfield_10401,  # GitHub
                     extract_values(issue.fields.customfield_10527),  # Governing Committee
+                    extract_values(issue.fields.customfield_10516),  # Dotted Line Governing Committee
                     issue.fields.customfield_10508,  # Public Review
                     generate_jira_url(issue.key, 'Freeze', 'Freeze Topsheet'),  # Freeze Topsheet
                     generate_jira_url(issue.key, 'Ratification-Ready', 'Ratification-Ready Topsheet'),  # Ratification-Ready Topsheet
                     issue.fields.customfield_10451,  # Board Review Planned Approval
-                    # Board Review Planned Approval (Quarter-Year)
-                    quarterYear,
+                    quarterYear,  # Board Review Planned Approval (Quarter-Year)
                     daysToBoardApproval,  # Days until end of quarter
-                    generate_next_jira_task_hyperlink(next_not_started_sub_task_url,next_not_started_sub_task_name)
+                    generate_next_jira_task_hyperlink(
+                        next_not_started_sub_task_url,
+                        next_not_started_sub_task_name
+                    )
                 ])
+
             start += len(issues)
 
 
 def extract_values(arr):
+    if arr is None:
+        return 'None'
+
     values = [item.value for item in arr]
     
     if not values:  # if list is empty
