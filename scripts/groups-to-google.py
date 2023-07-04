@@ -122,9 +122,9 @@ def get_data_from_jira(jira_token):
                         issue.fields.status.name,
                         next_phase(issue.fields.status.name),  # Group Next Phase
                         issue.fields.customfield_10515,  # Group Type
-                        issue.fields.customfield_10402,  # Governing Committee
+                        #extract_values(issue.fields.customfield_10527),  # Governing Committee
                         # Dotted-line Governing Committee
-                        extract_names(issue.fields.customfield_10516),
+                        #extract_names(issue.fields.customfield_10516),
                         issue.fields.customfield_10518,  # Group Lifecycle Starting Date
                         # Days since Group Lifecycle Starting Date
                         days_since_given_date(issue.fields.customfield_10518),
@@ -146,6 +146,30 @@ def get_data_from_jira(jira_token):
                     ])
 
             start += len(issues)
+
+
+def extract_values(arr):
+    ''''
+    This function extracts values from a Jira array field,
+    and returns a comma-separated string of values.
+    array field = multi-selection list
+    '''
+    if arr is None:
+        return 'None'
+
+    values = [item.value for item in arr]
+    
+    if not values:  # if list is empty
+        return ''
+    
+    # if list contains only one value or two values, join them appropriately
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        return ' and '.join(values)
+        
+    # if list contains more than two values, join all with commas and 'and' before the last one
+    return ', '.join(values[:-1]) + ' and ' + values[-1]
 
 
 def next_phase(current_phase):
