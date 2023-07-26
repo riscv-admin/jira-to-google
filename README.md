@@ -1,3 +1,7 @@
+[![Daily Push Groups To Google Sheets](https://github.com/riscv-admin/jira-to-google/actions/workflows/daily-push-groups-to-google.yaml/badge.svg)](https://github.com/riscv-admin/jira-to-google/actions/workflows/daily-push-groups-to-google.yaml)
+
+[![Daily Push Specs to Google Sheets](https://github.com/riscv-admin/jira-to-google/actions/workflows/daily-push-to-google.yml/badge.svg)](https://github.com/riscv-admin/jira-to-google/actions/workflows/daily-push-to-google.yml)
+
 # Jira-to-Google
 
 This repository contains a script that is designed to synchronize data from Jira to Google Sheets.
