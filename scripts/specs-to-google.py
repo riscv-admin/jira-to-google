@@ -136,6 +136,7 @@ def get_data_from_jira(jira_token):
                 'Done',
                 'Not Required to Freeze',
                 'AR Review Not Required',
+                'Approval Not Required',
                 'Not Required',
                 'Not Required for Ratification-Ready',
                 'Ecosystem Development Done',
