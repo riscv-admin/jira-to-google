@@ -1,8 +1,8 @@
 name: Daily Push Specs to Google Sheets
 
 on: 
-  schedule:
-    - cron:  '0 */8 * * *' # this will run three times a day (every 8 hours)
+  # schedule:
+  #   - cron:  '0 */8 * * *' # this will run three times a day (every 8 hours)
   workflow_dispatch: # this allows the workflow to be run manually from the Actions tab
 
 jobs:
